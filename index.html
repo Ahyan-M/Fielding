@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cricket Fielding Selector</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #474747;
+      font-family: Arial, sans-serif;
+    }
+
+    .cricket-field {
+      position: relative;
+      width: 80vw;
+      height: 80vw;
+      max-width: 900px;
+      max-height: 900px;
+      background-color: #4CAF50;
+      border-radius: 50%;
+      border: 5px solid #fff;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .circle-30-yard {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 60%;
+      height: 60%;
+      margin-top: -30%;
+      margin-left: -30%;
+      border: 2px dashed rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+    }
+
+    .wickets {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4%;
+      height: 20%;
+      margin-top: -10%;
+      margin-left: -2%;
+      background-color: #D2B48C;
+      border-radius: 10px;
+    }
+
+    .fielding-positions .position {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s ease;
+    }
+
+    .fielding-positions .position:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .draggable-player {
+      width: 30px;
+      height: 30px;
+      background-color: #2196F3;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .draggable-player:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .draggable-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 200px;
+      height: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .reset-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .reset-button:hover {
+      background-color: #d32f2f;
+    }
+
+    .download-button {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .download-button:hover {
+      background-color: #45a049;
+    }
+
+    .name-input-container {
+      position: absolute;
+      top: 20px;
+      left: 240px;
+      width: 200px;
+      height: auto;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .name-input-container input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .name-input-container input:focus {
+      border-color: #2196F3;
+      box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+    }
+
+    .player-name {
+      position: absolute;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      width: 80px;
+      top: 40px;
+      left: -25px;
+      white-space: nowrap;
+      overflow: visible;
+    }
+
+    #bowler, #wicketkeeper {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .toggle-button {
+      position: absolute;
+      top: 120px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .toggle-button:hover {
+      background-color: #145e9e;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="cricket-field">
+    <div class="circle-30-yard"></div>
+    <div class="wickets"></div>
+    <div class="fielding-positions"></div>
+  </div>
+
+  <div class="draggable-container">
+    <div class="draggable-player" id="player1" draggable="true">1</div>
+    <div class="draggable-player" id="player2" draggable="true">2</div>
+    <div class="draggable-player" id="player3" draggable="true">3</div>
+    <div class="draggable-player" id="player4" draggable="true">4</div>
+    <div class="draggable-player" id="player5" draggable="true">5</div>
+    <div class="draggable-player" id="player6" draggable="true">6</div>
+    <div class="draggable-player" id="player7" draggable="true">7</div>
+    <div class="draggable-player" id="player8" draggable="true">8</div>
+    <div class="draggable-player" id="player9" draggable="true">9</div>
+  </div>
+
+  <div class="name-input-container">
+    <input type="text" id="player1-name" placeholder="Player 1 Name">
+    <input type="text" id="player2-name" placeholder="Player 2 Name">
+    <input type="text" id="player3-name" placeholder="Player 3 Name">
+    <input type="text" id="player4-name" placeholder="Player 4 Name">
+    <input type="text" id="player5-name" placeholder="Player 5 Name">
+    <input type="text" id="player6-name" placeholder="Player 6 Name">
+    <input type="text" id="player7-name" placeholder="Player 7 Name">
+    <input type="text" id="player8-name" placeholder="Player 8 Name">
+    <input type="text" id="player9-name" placeholder="Player 9 Name">
+  </div>
+
+  
+
+  <button class="reset-button" onclick="resetField()">Reset</button>
+  <button class="download-button" onclick="downloadField()">Download Field</button>
+  <button class="toggle-button" onclick="toggleFreeDrag()">Toggle Free Drag</button>
+
+  <script>
+    const fieldingPositionsContainer = document.querySelector('.fielding-positions');
+    const draggableContainer = document.querySelector('.draggable-container');
+
+    const numOuterFielders = 20;
+    const outerFieldRadius = 440;
+    const inwardOffset = 16;
+
+    for (let i = 0; i < numOuterFielders; i++) {
+      const angle = (2 * Math.PI * i) / numOuterFielders;
+      const x = (outerFieldRadius - inwardOffset) * Math.cos(angle);
+      const y = (outerFieldRadius - inwardOffset) * Math.sin(angle);
+
+      if (Math.abs(angle - Math.PI / 2) < 0.01) continue;
+      if (Math.abs(angle - (3 * Math.PI) / 2) < 0.01) continue;
+
+      const position = document.createElement('div');
+      position.classList.add('position');
+      position.style.left = `calc(50% + ${(x / outerFieldRadius) * 50}% - 15px)`;
+      position.style.top = `calc(50% - ${(y / outerFieldRadius) * 50}% - 15px)`;
+
+      fieldingPositionsContainer.appendChild(position);
+    }
+
+    const numInnerFielders = 12;
+    const innerCircleRadius = 250;
+
+    for (let i = 0; i < numInnerFielders; i++) {
+      const angle = (2 * Math.PI * i) / numInnerFielders;
+      const x = innerCircleRadius * Math.cos(angle);
+      const y = innerCircleRadius * Math.sin(angle);
+
+      if (Math.abs(angle - Math.PI / 2) < 0.01 || Math.abs(angle - (3 * Math.PI) / 2) < 0.01) {
+        continue;
+      }
+
+      const position = document.createElement('div');
+      position.classList.add('position');
+      position.style.left = `calc(50% + ${x}px - 15px)`;
+      position.style.top = `calc(50% - ${y}px - 15px)`;
+
+      fieldingPositionsContainer.appendChild(position);
+    }
+
+    const specificFielderX = innerCircleRadius;
+    const specificFielderY = 0;
+
+    const specificFielder = document.createElement('div');
+    specificFielder.classList.add('position');
+    specificFielder.style.left = `calc(50% + ${specificFielderX}px - 15px)`;
+    specificFielder.style.top = `calc(50% + ${specificFielderY}px - 15px)`;
+
+    fieldingPositionsContainer.appendChild(specificFielder);
+
+    const slips = [
+      { id: 'slip1', top: '275px', left: '400px' },
+      { id: 'slip2', top: '285px', left: '365px' },
+      { id: 'slip3', top: '300px', left: '330px' }
+    ];
+
+    slips.forEach((slip) => {
+      const slipPosition = document.createElement('div');
+      slipPosition.classList.add('position');
+      slipPosition.id = slip.id;
+      slipPosition.style.top = slip.top;
+      slipPosition.style.left = slip.left;
+      fieldingPositionsContainer.appendChild(slipPosition);
+    });
+
+    const bowler = document.createElement('div');
+    bowler.classList.add('draggable-player');
+    bowler.id = 'bowler';
+    bowler.style.backgroundColor = '#2196F3';
+    bowler.style.position = 'absolute';
+    bowler.style.left = 'calc(50% - 15px)';
+    bowler.style.top = 'calc(50% - 150px)';
+    bowler.textContent = 'WK';
+    fieldingPositionsContainer.appendChild(bowler);
+
+    const wicketkeeper = document.createElement('div');
+    wicketkeeper.classList.add('draggable-player');
+    wicketkeeper.id = 'wicketkeeper';
+    wicketkeeper.style.backgroundColor = '#2196F3';
+    wicketkeeper.style.position = 'absolute';
+    wicketkeeper.style.left = 'calc(50% - 15px)';
+    wicketkeeper.style.top = 'calc(50% + 150px)';
+    wicketkeeper.textContent = 'B';
+    fieldingPositionsContainer.appendChild(wicketkeeper);
+
+    const players = document.querySelectorAll('.draggable-player');
+    const positions = document.querySelectorAll('.fielding-positions .position');
+
+    players.forEach(player => {
+      player.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', e.target.id);
+      });
+    });
+
+    positions.forEach(position => {
+      position.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        position.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+      });
+
+      position.addEventListener('dragleave', (e) => {
+        position.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+      });
+
+      position.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const playerId = e.dataTransfer.getData('text/plain');
+        const player = document.getElementById(playerId);
+
+        const previousPosition = player.parentElement;
+        if (previousPosition.classList.contains('position')) {
+          const oldNameDisplay = previousPosition.querySelector('.player-name');
+          if (oldNameDisplay) {
+            oldNameDisplay.remove();
+          }
+        }
+
+        if (position.hasChildNodes()) {
+          position.innerHTML = '';
+        }
+
+        position.appendChild(player);
+        player.style.position = 'static';
+        position.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+
+        updatePlayerNameDisplay(position, playerId);
+      });
+    });
+
+    let selectedPlayer = null;
+
+    players.forEach(player => {
+      player.addEventListener('click', () => {
+        if (selectedPlayer) {
+          selectedPlayer.style.border = '';
+        }
+
+        selectedPlayer = player;
+        selectedPlayer.style.border = '3px solid red';
+      });
+    });
+
+    positions.forEach(position => {
+      position.addEventListener('click', () => {
+        if (selectedPlayer) {
+          const previousPosition = selectedPlayer.parentElement;
+          if (previousPosition.classList.contains('position')) {
+            const oldNameDisplay = previousPosition.querySelector('.player-name');
+            if (oldNameDisplay) {
+              oldNameDisplay.remove();
+            }
+          }
+
+          if (position.hasChildNodes()) {
+            position.innerHTML = '';
+          }
+
+          position.appendChild(selectedPlayer);
+          selectedPlayer.style.position = 'static';
+          selectedPlayer.style.border = '';
+          updatePlayerNameDisplay(position, selectedPlayer.id);
+          selectedPlayer = null;
+        }
+      });
+    });
+
+    function updatePlayerNameDisplay(position, playerId) {
+      const playerNameInput = document.getElementById(`${playerId}-name`);
+      if (playerNameInput) {
+        const playerName = playerNameInput.value || `Player ${playerId.replace('player', '')}`;
+        const nameDisplay = document.createElement('div');
+        nameDisplay.classList.add('player-name');
+        nameDisplay.textContent = playerName;
+        position.appendChild(nameDisplay);
+      }
+    }
+
+    const nameInputs = document.querySelectorAll('.name-input-container input');
+    nameInputs.forEach(input => {
+      input.addEventListener('input', (e) => {
+        const playerId = e.target.id.replace('-name', '');
+        const player = document.getElementById(playerId);
+        if (player && player.parentElement.classList.contains('position')) {
+          const nameDisplay = player.parentElement.querySelector('.player-name');
+          if (nameDisplay) {
+            nameDisplay.textContent = e.target.value || `Player ${playerId.replace('player', '')}`;
+          }
+        }
+      });
+    });
+
+    function resetField() {
+      const players = document.querySelectorAll('.draggable-player');
+      const draggableContainer = document.querySelector('.draggable-container');
+
+      players.forEach(player => {
+        if (player.id !== 'bowler' && player.id !== 'wicketkeeper') {
+          if (!player.parentElement.classList.contains('draggable-container')) {
+            draggableContainer.appendChild(player);
+          }
+          player.style.position = 'static';
+        }
+      });
+
+      const nameDisplays = document.querySelectorAll('.player-name');
+      nameDisplays.forEach(nameDisplay => nameDisplay.remove());
+
+      const nameInputs = document.querySelectorAll('.name-input-container input');
+      nameInputs.forEach((input, index) => {
+        input.value = '';
+        const defaultName = `Player ${index + 1}`;
+        const player = document.getElementById(`player${index + 1}`);
+        if (player) {
+          player.textContent = index + 1;
+        }
+      });
+    }
+
+    function downloadField() {
+      const cricketField = document.querySelector('.cricket-field');
+
+      html2canvas(cricketField).then(canvas => {
+        const image = canvas.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = 'fielding_setup.png';
+        link.click();
+      });
+    }
+
+    let isFreeDragMode = false;
+
+    function toggleFreeDrag() {
+      isFreeDragMode = !isFreeDragMode;
+
+      const cricketField = document.querySelector('.cricket-field');
+      const toggleButton = document.querySelector('.toggle-button');
+
+      if (isFreeDragMode) {
+        cricketField.addEventListener('dragover', handleDragOver);
+        cricketField.addEventListener('drop', handleDrop);
+        toggleButton.textContent = 'Toggle Fixed Positions';
+      } else {
+        cricketField.removeEventListener('dragover', handleDragOver);
+        cricketField.removeEventListener('drop', handleDrop);
+        toggleButton.textContent = 'Toggle Free Drag';
+        resetField();
+      }
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const playerId = e.dataTransfer.getData('text/plain');
+      const player = document.getElementById(playerId);
+
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left - 15;
+      const y = e.clientY - rect.top - 15;
+
+      player.style.position = 'absolute';
+      player.style.left = `${x}px`;
+      player.style.top = `${y}px`;
+
+      const previousPosition = player.parentElement;
+      if (previousPosition.classList.contains('position')) {
+        const oldNameDisplay = previousPosition.querySelector('.player-name');
+        if (oldNameDisplay) {
+          oldNameDisplay.remove();
+        }
+      }
+
+      // Append the player to the cricket field
+      e.target.appendChild(player);
+
+      // Update player name display
+      const playerNameInput = document.getElementById(`${playerId}-name`);
+      if (playerNameInput) {
+        const playerName = playerNameInput.value || `Player ${playerId.replace('player', '')}`;
+        const nameDisplay = document.createElement('div');
+        nameDisplay.classList.add('player-name');
+        nameDisplay.textContent = playerName;
+        nameDisplay.style.position = 'absolute';
+        nameDisplay.style.top = `${y + 40}px`; // Adjust the position to be below the player
+        nameDisplay.style.left = `${x - 25}px`; // Center the name under the player
+        e.target.appendChild(nameDisplay);
+      }
+    }
+  </script>
+</body>
+</html>
